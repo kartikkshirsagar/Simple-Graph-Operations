@@ -41,7 +41,7 @@ void InsertAtStart(Node** llptr, int new_data)
     /* 2. put in the data  */
     new_node->node_no  = new_data; 
    
-    /* 3. Make next of new node as head */
+    /* 3. Make next of new node as head *
     new_node->next = (*llptr); 
    
     /* 4. move the head to point to the new node */
