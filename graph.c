@@ -339,11 +339,23 @@ void deleteEdgeU(alist* graph,int node1,int node2)//node1--->node2 directed dele
 }
 
 
-
+vector neighbours(alist* graph,int node_no)
+{
+    Node* lptr=graph->arr[node_no].list;
+    vector ret;
+    Node* temp=lptr;
+    while(temp!=NULL)
+    {
+        push_back(&ret,temp->node_no);
+        temp=temp->next;
+    }
+    return ret;
+}
 
 
 void DepthFirstSearch(alist* graph)
 {
     stack frontier;
+
 
 }
