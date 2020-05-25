@@ -14,7 +14,7 @@ typedef struct stack_tag
     Node* top;
 }stack;
 
-typedef struct stack_tag
+typedef struct queue_tag
 {
     Node* front;
     Node* rear;
@@ -93,6 +93,13 @@ void printVector(vector *a)
 	printf("\n");
 }
 
+Node* makeNode(int data)
+{
+    Node* nptr=(Node*)malloc(sizeof(Node));
+    nptr->node_no=data;
+    nptr->next=NULL;
+    return nptr;
+}
 
 
 
@@ -117,7 +124,7 @@ void InsertAtEnd(Node** llptr,int data)
     Node* new_node=makeNode(data);
     if(lptr==NULL)
     {
-        lptr=new_node;
+        *llptr=new_node;
     }
     else
     {
@@ -170,6 +177,17 @@ void deleteAtStart(Node** llptr)
 }
 
 
+
+void initStack(stack* sptr)
+{
+    sptr->top=NULL;
+}
+
+void initQ(queue* qptr)
+{
+    qptr->rear=qptr->front=NULL;
+    
+}
 void PushQ(queue* qptr,int data)
 {
     InsertAtEnd(&qptr->front,data);
@@ -177,17 +195,35 @@ void PushQ(queue* qptr,int data)
 
 void PushStack(stack* sptr,int data)
 {
-    InsertAtEnd(&sptr->top,data);
+    InsertAtStart(&sptr->top,data);
 }
 
 void PopStack(stack* sptr)
 {
-    deleteAtEnd(&sptr->top);
+    deleteAtStart(&sptr->top);
 }
 
 void PopQ(queue* qptr)
 {
     deleteAtStart(&qptr->front);
+}
+
+bool isStackEmpty(stack* sptr)
+{
+    if(sptr->top==NULL)
+    {
+        return TRUE;
+    }
+    return FALSE;
+}
+
+bool isQEmpty(queue* qptr)
+{
+    if(qptr->front==NULL && qptr->rear==NULL)
+    {
+        return TRUE;
+    }
+    return FALSE;
 }
 
 
@@ -203,15 +239,9 @@ int listSize(Node* lptr)
     return count;
 }
 
-Node* makeNode(int data)
-{
-    Node* nptr=(Node*)malloc(sizeof(Node));
-    nptr->node_no=data;
-    nptr->next=NULL;
-    return nptr;
-}
 
-void push_back(Node** lptr,int data)
+
+void push_backL(Node** lptr,int data)
 {
     Node* nptr=makeNode(data);
     Node* temp=*lptr;
@@ -246,6 +276,20 @@ void removeList(Node* lptr,Node* ptr)
     temp->next=ptr->next;
     free(ptr);
 }
+
+bool isElementV(vector* seen,int element)
+{
+    bool retval=FALSE;
+    for(int i=0;i<seen->used;i++)
+    {
+        if(seen->array[i]==element)
+        {
+            retval=TRUE;
+        }
+    }
+    return retval;
+}
+
 
 Node* Search(Node* lptr,int data)
 {
@@ -319,12 +363,12 @@ void deleteNode(alist* graph,int number)
 
 void addEdgeD(alist* graph,int node1,int node2)// node1->node2 directed
 {
-    push_back(&graph->arr[node1].list,node2);
+    push_backL(&graph->arr[node1].list,node2);
 }
 void addEdgeU(alist* graph,int node1,int node2)// node1---node2 undirected
 {
-    push_back(&graph->arr[node1].list,node2);
-    push_back(&graph->arr[node2].list,node1);
+    push_backL(&graph->arr[node1].list,node2);
+    push_backL(&graph->arr[node2].list,node1);
 }
 
 void deleteEdgeD(alist* graph,int node1,int node2)//node1--->node2 directed delete
@@ -343,6 +387,7 @@ vector neighbours(alist* graph,int node_no)
 {
     Node* lptr=graph->arr[node_no].list;
     vector ret;
+    initVector(&ret);
     Node* temp=lptr;
     while(temp!=NULL)
     {
@@ -352,10 +397,86 @@ vector neighbours(alist* graph,int node_no)
     return ret;
 }
 
-
+void Traverse(int node_no)
+{
+    printf("%d-->",node_no);
+}
 void DepthFirstSearch(alist* graph)
 {
     stack frontier;
+    initStack(&frontier);
+    vector seen;
+    initVector(&seen);
+    for(int i=0;i<graph->occupied && graph->occupied>seen.used;i++)
+    {
+        PushStack(&frontier,graph->arr[i].node_number);
+        while(!isStackEmpty(&frontier) && graph->occupied>seen.used)
+        {
+            
+            vector neighbors;
+            initVector(&neighbors);
+            neighbors=neighbours(graph,frontier.top->node_no);
+            Traverse(frontier.top->node_no);
+            push_back(&seen,graph->arr[i].node_number);
+            PopStack(&frontier);
+            for(int i=0;i<neighbors.used;i++)
+            {
+                if(!isElementV(&seen,neighbors.array[i]))
+                {
+                    PushStack(&frontier,neighbors.array[i]);
+                    
+                }
+            }
+        }
+    }
+}
 
+
+void BreadthFirstSearch(alist* graph)
+{
+    queue frontier;
+    initQ(&frontier);
+    vector seen;
+    initVector(&seen);
+    for(int i=0;i<graph->occupied && graph->occupied>seen.used;i++)
+    {
+        PushQ(&frontier,graph->arr[i].node_number);
+        while(!isQEmpty(&frontier) && graph->occupied>seen.used)
+        {
+            
+            vector neighbors;
+            initVector(&neighbors);
+            neighbors=neighbours(graph,frontier.front->node_no);
+            Traverse(frontier.front->node_no);
+            push_back(&seen,graph->arr[i].node_number);
+            PopQ(&frontier);
+            for(int i=0;i<neighbors.used;i++)
+            {
+                if(!isElementV(&seen,neighbors.array[i]))
+                {
+                    PushQ(&frontier,neighbors.array[i]);
+                    
+                }
+            }
+        }
+    }
+}
+
+
+int main()
+{
+    alist graph=createGraph();
+    addNode(&graph);
+    addNode(&graph);
+    addNode(&graph);
+    addNode(&graph);
+    addNode(&graph);
+    addNode(&graph);
+    addEdgeD(&graph,0,1);
+    addEdgeD(&graph,0,2);
+    addEdgeD(&graph,1,3);
+    addEdgeD(&graph,2,4);
+    addEdgeD(&graph,4,5);
+    BreadthFirstSearch(&graph);
 
 }
