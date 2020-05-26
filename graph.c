@@ -1,12 +1,14 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include<limits.h>
 #define MAX 20
 #define INITSIZE 4
 
 typedef struct Node{
     int node_no;
     struct Node* next;
+    int cost;
 }Node;
 
 typedef struct stack_tag
@@ -93,11 +95,12 @@ void printVector(vector *a)
 	printf("\n");
 }
 
-Node* makeNode(int data)
+Node* makeNode(int data,int cost)
 {
     Node* nptr=(Node*)malloc(sizeof(Node));
     nptr->node_no=data;
     nptr->next=NULL;
+    nptr->cost=cost;
     return nptr;
 }
 
@@ -106,7 +109,7 @@ Node* makeNode(int data)
 void InsertAtStart(Node** llptr, int new_data) 
 { 
     /* 1. allocate node */
-    Node* new_node=makeNode(new_data); 
+    Node* new_node=makeNode(new_data,1); 
    
     /* 2. put in the data  */
     new_node->node_no  = new_data; 
@@ -121,7 +124,7 @@ void InsertAtStart(Node** llptr, int new_data)
 void InsertAtEnd(Node** llptr,int data)
 {
     Node* lptr=*llptr;
-    Node* new_node=makeNode(data);
+    Node* new_node=makeNode(data,1);
     if(lptr==NULL)
     {
         *llptr=new_node;
@@ -243,7 +246,7 @@ int listSize(Node* lptr)
 
 void push_backL(Node** lptr,int data)
 {
-    Node* nptr=makeNode(data);
+    Node* nptr=makeNode(data,1);
     Node* temp=*lptr;
     if(*lptr==NULL)
     {
@@ -258,6 +261,26 @@ void push_backL(Node** lptr,int data)
     temp->next=nptr;
 
 }
+
+
+void push_backLWeight(Node** lptr,int data,int cost)
+{
+    Node* nptr=makeNode(data,cost);
+    Node* temp=*lptr;
+    if(*lptr==NULL)
+    {
+        temp=nptr;
+        *lptr=nptr;
+        return;
+    }
+    while(temp->next!=NULL)
+    {
+        temp=temp->next;
+    }
+    temp->next=nptr;
+
+}
+
 
 void removeList(Node** llptr,Node* ptr)
 {
@@ -420,6 +443,20 @@ void addEdgeU(alist* graph,int node1,int node2)// node1---node2 undirected
     push_backL(&graph->arr[SearchNodeG(graph,node2)].list,node1);
 }
 
+
+void addEdgeWeightedD(alist* graph,int node1,int node2,int cost)// node1->node2 directed
+{
+    push_backL(&graph->arr[SearchNodeG(graph,node1)].list,node2);
+}
+void addEdgeWeightedU(alist* graph,int node1,int node2,int cost)// node1---node2 undirected
+{
+    push_backL(&graph->arr[SearchNodeG(graph,node1)].list,node2);
+    push_backL(&graph->arr[SearchNodeG(graph,node2)].list,node1);
+}
+
+
+
+
 void deleteEdgeD(alist* graph,int node1,int node2)//node1--->node2 directed delete
 {
     removeList(&graph->arr[node1].list,Search(graph->arr[SearchNodeG(graph,node1)].list,node2));
@@ -450,9 +487,10 @@ void Traverse(int node_no)
 {
     printf("%d-->",node_no);
 }
-void DepthFirstSearch(alist* graph)
+void DepthFirstSearch(alist* graph,bool* connected)
 {
     stack frontier;
+    int flag=0;
     initStack(&frontier);
     vector seen;
     initVector(&seen);
@@ -479,6 +517,17 @@ void DepthFirstSearch(alist* graph)
                     }
                 }
             }
+            if(graph->occupied==seen.used && flag==0)
+            {
+                *connected=TRUE;
+                flag=1;
+            }
+            else
+            {
+                *connected=FALSE;
+                flag=1;
+            }
+            
         }
         
     }
@@ -519,25 +568,158 @@ void BreadthFirstSearch(alist* graph)
     }
 }
 
+void topology(int v,bool visited[],stack* st,alist* g)
+{
+    visited[SearchNodeG(g,v)]=TRUE;
+    Node* lptr=g->arr[SearchNodeG(g,v)].list;
+    Node* temp=lptr;
+    if(temp!=NULL)
+    {
+        while(temp!=NULL)
+        {
+            if(visited[SearchNodeG(g,temp->node_no)]==FALSE)
+            {
+                topology(temp->node_no,visited,st,g);
+            }
+            temp=temp->next;
+        }
+    }
+    PushStack(st,v);
+}
 
+void TopologicalSort(alist* graph){
+    stack st;
+    bool visited[graph->occupied];
+    for(int i=0;i<graph->occupied;i++)
+    {
+        visited[i]=FALSE;
+    }
+    for(int i=0;i<graph->occupied;i++)
+    {
+        if(visited[i]==FALSE)
+        {
+            topology(graph->arr[i].node_number,visited,&st,graph);
+        }
+    }
+
+    int j=0;
+    while(!isStackEmpty(&st) && j<graph->occupied)
+    {
+        printf("%d-->",st.top->node_no);
+        PopStack(&st);
+        j++;
+    }
+
+};
+
+
+bool isConnected(alist* graph)
+{
+    bool connect;
+    DepthFirstSearch(graph,&connect);
+    if(connect==TRUE)
+    {
+        printf("Graph is connected\n");
+    }
+    else
+    {
+        printf("Graph is disconnected\n");
+    }
+    return connect;
+}
+
+int Cost(alist* g,int u,int v)
+{
+    if(u==v)
+    {
+        return 0;
+    }
+    int index=SearchNodeG(g,u);
+    int cost=INT_MAX;
+    Node* lptr=g->arr[index].list;
+    Node* temp=lptr;
+    while(temp!=NULL)
+    {
+        if(temp->node_no==v)
+        {
+            cost=temp->cost;
+        }
+        temp=temp->next;
+    }
+    return cost;
+}
+
+
+int minInArr(int Dist[],int sz)
+{
+    int min=INT_MAX;
+    for(int i=0;i<sz;i++)
+    {
+        if(Dist[i]<min)
+        {
+            min=Dist[i];
+        }
+    }
+    return min;
+}
+
+void Dijkstra(alist* graph,int node_number)
+{
+    int Found[graph->occupied];
+    int Distance[graph->occupied];
+    for(int i=0;i<graph->occupied;i++)
+    {
+        if(i==SearchNodeG(graph,node_number))
+        {
+            Found[i]=1;
+        }
+        else
+        {
+            Found[i]=0;
+        }
+
+        Distance[i]=Cost(graph,node_number,graph->arr[i].node_number);
+        for(int i=0;i<graph->occupied-1;i++)
+        {
+            int minNode=minInArr(Distance,graph->occupied);
+            Found[SearchNodeG(graph,minNode)]=1;
+            for(int j=0;j<graph->occupied;j++)
+            {
+                if(Found[j]==0)
+                {
+                    int c=Cost(graph,i,j);
+                    if(Distance[i]+c<Distance[j])
+                    {
+                        Distance[j]=Distance[i]+c;
+                    }
+                }
+            }
+        }        
+    }
+}
 int main()
 {
     alist graph=createGraph();
+    bool connect;
     addNode(&graph,70);
     addNode(&graph,50);
     addNode(&graph,10);
     addNode(&graph,12);
     addNode(&graph,32);
     addNode(&graph,54);
-    addEdgeD(&graph,70,10);
-    addEdgeD(&graph,70,50);
-    addEdgeD(&graph,50,12);
-    addEdgeD(&graph,10,32);
-    addEdgeD(&graph,32,54);
-    deleteNode(&graph,32);
-    DepthFirstSearch(&graph);
+    addEdgeU(&graph,70,10);
+    addEdgeU(&graph,70,50);
+    addEdgeU(&graph,50,12);
+    addEdgeU(&graph,10,32);
+    addEdgeU(&graph,32,54);
+    //deleteNode(&graph,32);
+    DepthFirstSearch(&graph,&connect);
     printf("\n");
     BreadthFirstSearch(&graph);
+    printf("\n");
+    TopologicalSort(&graph);
+    printf("\n");
+
     
 
 }
