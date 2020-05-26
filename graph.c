@@ -229,6 +229,43 @@ bool isQEmpty(queue* qptr)
     return FALSE;
 }
 
+bool isPresentinStack(stack* qptr,int num)
+{
+    Node* lptr=qptr->top;
+    int flag=0;bool retval=FALSE;
+    Node* temp=lptr;
+    while(temp!=NULL && flag==0)
+    {
+        if(temp->node_no==num)
+        {
+            retval=TRUE;
+            flag=1;
+        }
+        temp=temp->next;
+    }
+    return retval;
+}
+
+
+bool isPresentinQ(queue* qptr,int num)
+{
+    Node* lptr=qptr->front;
+    int flag=0;bool retval=FALSE;
+    Node* temp=lptr;
+    while(temp!=NULL && flag==0)
+    {
+        if(temp->node_no==num)
+        {
+            retval=TRUE;
+            flag=1;
+        }
+        temp=temp->next;
+    }
+    return retval;
+}
+
+
+Pri
 
 int listSize(Node* lptr)
 {
@@ -446,12 +483,12 @@ void addEdgeU(alist* graph,int node1,int node2)// node1---node2 undirected
 
 void addEdgeWeightedD(alist* graph,int node1,int node2,int cost)// node1->node2 directed
 {
-    push_backL(&graph->arr[SearchNodeG(graph,node1)].list,node2);
+    push_backLWeight(&graph->arr[SearchNodeG(graph,node1)].list,node2,cost);
 }
 void addEdgeWeightedU(alist* graph,int node1,int node2,int cost)// node1---node2 undirected
 {
-    push_backL(&graph->arr[SearchNodeG(graph,node1)].list,node2);
-    push_backL(&graph->arr[SearchNodeG(graph,node2)].list,node1);
+    push_backLWeight(&graph->arr[SearchNodeG(graph,node1)].list,node2,cost);
+    push_backLWeight(&graph->arr[SearchNodeG(graph,node2)].list,node1,cost);
 }
 
 
@@ -510,7 +547,7 @@ void DepthFirstSearch(alist* graph,bool* connected)
                 PopStack(&frontier);
                 for(int i=0;i<neighbors.used;i++)
                 {
-                    if(!isElementV(&seen,neighbors.array[i]))
+                    if(!isElementV(&seen,neighbors.array[i]) && !isPresentinStack(&frontier,neighbors.array[i]))
                     {
                         PushStack(&frontier,neighbors.array[i]);
                         
@@ -556,7 +593,7 @@ void BreadthFirstSearch(alist* graph)
                 PopQ(&frontier);
                 for(int i=0;i<neighbors.used;i++)
                 {
-                    if(!isElementV(&seen,neighbors.array[i]))
+                    if(!isElementV(&seen,neighbors.array[i]) && !isPresentinQ(&frontier,neighbors.array[i]))
                     {
                         PushQ(&frontier,neighbors.array[i]);
                         
@@ -635,7 +672,7 @@ int Cost(alist* g,int u,int v)
         return 0;
     }
     int index=SearchNodeG(g,u);
-    int cost=INT_MAX;
+    int cost=999999;
     Node* lptr=g->arr[index].list;
     Node* temp=lptr;
     while(temp!=NULL)
@@ -650,23 +687,70 @@ int Cost(alist* g,int u,int v)
 }
 
 
-int minInArr(int Dist[],int sz)
+int minInArr(int Dist[],int sz,int Found[])
 {
     int min=INT_MAX;
+    int minid=INT_MAX;
     for(int i=0;i<sz;i++)
     {
-        if(Dist[i]<min)
+        if(Found[i]!=1)
         {
-            min=Dist[i];
+            if(Dist[i]<min)
+            {
+                min=Dist[i];
+                minid=i;
+            }
         }
+        
     }
-    return min;
+    return minid;
 }
+
+
+void printCosts(int Dist[],int sz,int num) //Function only works with index==node_number
+{
+    printf("Costs from vertex %d\n",num);
+    for(int i=0;i<sz;i++)
+    {
+        printf("Vertex %d\t%d\n",i,Dist[i]);
+    }
+}
+
+void printPaths(int Path[],int sz,int num)//Function only works with index==node_number
+{
+    printf("Paths from vertex %d\n",num);
+    for(int i=0;i<sz;i++)
+    {
+        printf("Shortest Path from %d to %d\t",num,i);
+        if(Path[i]==num)
+        {
+            printf("%d--->%d",num,i);
+        }
+        else
+        {
+            stack path;
+            int parent=Path[i];
+            do
+            {
+                parent=Path[parent];
+                PushStack(&path,parent);
+            }while(parent!=num);
+            
+        }
+        
+    }
+}
+
 
 void Dijkstra(alist* graph,int node_number)
 {
     int Found[graph->occupied];
+    int Path[graph->occupied];
     int Distance[graph->occupied];
+    for(int i=0;i<graph->occupied;i++)
+    {
+        Path[i]=node_number;
+    }
     for(int i=0;i<graph->occupied;i++)
     {
         if(i==SearchNodeG(graph,node_number))
@@ -677,41 +761,49 @@ void Dijkstra(alist* graph,int node_number)
         {
             Found[i]=0;
         }
-
+    
         Distance[i]=Cost(graph,node_number,graph->arr[i].node_number);
-        for(int i=0;i<graph->occupied-1;i++)
+    }
+    for(int i=0;i<graph->occupied-1;i++)
+    {
+        int minNode=minInArr(Distance,graph->occupied,Found);
+        Found[minNode]=1;//for this node number should be equal to the node index
+        for(int j=0;j<graph->occupied;j++)
         {
-            int minNode=minInArr(Distance,graph->occupied);
-            Found[SearchNodeG(graph,minNode)]=1;
-            for(int j=0;j<graph->occupied;j++)
+            if(Found[j]==0)
             {
-                if(Found[j]==0)
+                int c=Cost(graph,minNode,j);
+                if(Distance[minNode]+c<Distance[j])
                 {
-                    int c=Cost(graph,i,j);
-                    if(Distance[i]+c<Distance[j])
-                    {
-                        Distance[j]=Distance[i]+c;
-                    }
+                    Distance[j]=Distance[minNode]+c;
+                    Path[j]=graph->arr[minNode].node_number;
                 }
             }
-        }        
+        }
     }
+    printCosts(Distance,graph->occupied,node_number);       
 }
+
 int main()
 {
     alist graph=createGraph();
     bool connect;
-    addNode(&graph,70);
-    addNode(&graph,50);
-    addNode(&graph,10);
-    addNode(&graph,12);
-    addNode(&graph,32);
-    addNode(&graph,54);
-    addEdgeU(&graph,70,10);
-    addEdgeU(&graph,70,50);
-    addEdgeU(&graph,50,12);
-    addEdgeU(&graph,10,32);
-    addEdgeU(&graph,32,54);
+    addNode(&graph,0);
+    addNode(&graph,1);
+    addNode(&graph,2);
+    addNode(&graph,3);
+    addNode(&graph,4);
+   // addNode(&graph,5);
+    addEdgeWeightedD(&graph,0,1,2);
+    addEdgeWeightedD(&graph,0,2,5);
+    addEdgeWeightedD(&graph,0,4,3);
+    addEdgeWeightedD(&graph,1,2,6);
+    addEdgeWeightedD(&graph,1,4,10);
+    addEdgeWeightedD(&graph,1,3,4);
+    addEdgeWeightedD(&graph,4,3,2);
+    addEdgeWeightedD(&graph,4,2,1);
+    addEdgeWeightedD(&graph,2,3,6);
+    addEdgeWeightedD(&graph,2,4,2);
     //deleteNode(&graph,32);
     DepthFirstSearch(&graph,&connect);
     printf("\n");
@@ -719,6 +811,7 @@ int main()
     printf("\n");
     TopologicalSort(&graph);
     printf("\n");
+    Dijkstra(&graph,2);
 
     
 
