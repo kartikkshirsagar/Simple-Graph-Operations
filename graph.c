@@ -265,7 +265,15 @@ bool isPresentinQ(queue* qptr,int num)
 }
 
 
-Pri
+void PrintStack(stack* sptr)
+{
+    Node* lptr=sptr->top;
+    while(lptr!=NULL)
+    {
+        printf("%d--->",sptr->top->node_no);
+        lptr=lptr->next;   
+    }
+}
 
 int listSize(Node* lptr)
 {
@@ -709,7 +717,7 @@ int minInArr(int Dist[],int sz,int Found[])
 
 void printCosts(int Dist[],int sz,int num) //Function only works with index==node_number
 {
-    printf("Costs from vertex %d\n",num);
+    printf("\nCosts from vertex %d\n",num);
     for(int i=0;i<sz;i++)
     {
         printf("Vertex %d\t%d\n",i,Dist[i]);
@@ -718,24 +726,28 @@ void printCosts(int Dist[],int sz,int num) //Function only works with index==nod
 
 void printPaths(int Path[],int sz,int num)//Function only works with index==node_number
 {
-    printf("Paths from vertex %d\n",num);
+    printf("\n\nPaths from vertex %d\n",num);
     for(int i=0;i<sz;i++)
     {
-        printf("Shortest Path from %d to %d\t",num,i);
+        printf("\nShortest Path from %d to %d\t",num,i);
         if(Path[i]==num)
         {
-            printf("%d--->%d",num,i);
+            printf("%d--->%d\n",num,i);
         }
         else
         {
             stack path;
+            printf("%d--->",num);
+            initStack(&path);
             int parent=Path[i];
             do
             {
-                parent=Path[parent];
                 PushStack(&path,parent);
+                parent=Path[parent];
+                
             }while(parent!=num);
-            
+            PrintStack(&path);
+            printf("%d\n",i);
         }
         
     }
@@ -781,7 +793,8 @@ void Dijkstra(alist* graph,int node_number)
             }
         }
     }
-    printCosts(Distance,graph->occupied,node_number);       
+    printCosts(Distance,graph->occupied,node_number);
+    printPaths(Path,graph->occupied,node_number);      
 }
 
 int main()
@@ -811,7 +824,7 @@ int main()
     printf("\n");
     TopologicalSort(&graph);
     printf("\n");
-    Dijkstra(&graph,2);
+    Dijkstra(&graph,0);
 
     
 
