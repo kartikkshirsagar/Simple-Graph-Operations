@@ -532,7 +532,7 @@ void Traverse(int node_no)
 {
     printf("%d-->",node_no);
 }
-void DepthFirstSearch(alist* graph,bool* connected)
+void DepthFirstTraversal(alist* graph,bool* connected)
 {
     stack frontier;
     int flag=0;
@@ -579,7 +579,98 @@ void DepthFirstSearch(alist* graph,bool* connected)
 }
 
 
-void BreadthFirstSearch(alist* graph)
+bool DepthFirstSearch(alist* graph,bool* connected,int toSearch)
+{
+    stack frontier;
+    int flag=0;
+    initStack(&frontier);
+    vector seen;
+    initVector(&seen);
+    for(int i=0;i<graph->occupied && graph->occupied>seen.used;i++)
+    {   
+        if(graph->arr[i].node_number!=-1 && !isElementV(&seen,graph->arr[i].node_number))
+        {
+            PushStack(&frontier,graph->arr[i].node_number);
+            while(!isStackEmpty(&frontier) && graph->occupied>seen.used)
+            {
+                
+                vector neighbors;
+                initVector(&neighbors);
+                neighbors=neighbours(graph,frontier.top->node_no);
+                if(toSearch==frontier.top->node_no)
+                {
+                    return TRUE;
+                }
+                push_back(&seen,frontier.top->node_no);
+                PopStack(&frontier);
+                for(int i=0;i<neighbors.used;i++)
+                {
+                    if(!isElementV(&seen,neighbors.array[i]) && !isPresentinStack(&frontier,neighbors.array[i]))
+                    {
+                        PushStack(&frontier,neighbors.array[i]);
+                        
+                    }
+                }
+            }
+            if(graph->occupied==seen.used && flag==0)
+            {
+                *connected=TRUE;
+                flag=1;
+            }
+            else
+            {
+                *connected=FALSE;
+                flag=1;
+            }
+            
+        }
+        
+    }
+}
+
+
+
+
+bool BreadthFirstSearch(alist* graph,int toSearch)
+{
+    queue frontier;
+    initQ(&frontier);
+    vector seen;
+    initVector(&seen);
+    for(int i=0;i<graph->occupied && graph->occupied>seen.used;i++)
+    {
+        if(graph->arr[i].node_number!=-1 && !isElementV(&seen,graph->arr[i].node_number))
+        {
+            PushQ(&frontier,graph->arr[i].node_number);
+            while(!isQEmpty(&frontier) && graph->occupied>seen.used)
+            {
+                
+                vector neighbors;
+                initVector(&neighbors);
+                neighbors=neighbours(graph,frontier.front->node_no);
+                if(toSearch==frontier.front->node_no)
+                {
+                    return TRUE;
+                }
+                push_back(&seen,frontier.front->node_no);
+                PopQ(&frontier);
+                for(int i=0;i<neighbors.used;i++)
+                {
+                    if(!isElementV(&seen,neighbors.array[i]) && !isPresentinQ(&frontier,neighbors.array[i]))
+                    {
+                        PushQ(&frontier,neighbors.array[i]);
+                        
+                    }
+                }
+            }
+        }
+        
+    }
+}
+
+
+
+void BreadthFirstTraversal(alist* graph)
 {
     queue frontier;
     initQ(&frontier);
@@ -612,6 +703,7 @@ void BreadthFirstSearch(alist* graph)
         
     }
 }
+
 
 void topology(int v,bool visited[],stack* st,alist* g)
 {
@@ -661,7 +753,7 @@ void TopologicalSort(alist* graph){
 bool isConnected(alist* graph)
 {
     bool connect;
-    DepthFirstSearch(graph,&connect);
+    DepthFirstTraversal(graph,&connect);
     if(connect==TRUE)
     {
         printf("Graph is connected\n");
@@ -797,6 +889,51 @@ void Dijkstra(alist* graph,int node_number)
     printPaths(Path,graph->occupied,node_number);      
 }
 
+void APSP(alist* graph)
+{
+    int Dist[graph->occupied][graph->occupied];
+    int Path[graph->occupied][graph->occupied];
+    int i,j,k;int N=graph->occupied;
+    for(i=0;i<N;i++)
+    {
+        for(j=0;j<N;j++)
+        {
+            Dist[i][j]=Cost(graph,graph->arr[i].node_number,graph->arr[j].node_number); //Making A^-1
+            Path[i][j]=i;
+        }
+    }
+
+    for(k=0;k<N;k++)
+    {
+        for(i=0;i<N;i++)
+        {
+            for(j=0;j<N;j++)
+            {
+                if(Dist[i][j]>Dist[i][k] + Dist[k][j])
+                {
+                    Dist[i][j]=Dist[i][k] + Dist[k][j];
+                    Path[i][j]=graph->arr[k].node_number;
+                }
+            }
+        }
+    }
+
+    for(int i=0;i<N;i++) //Extracting info for each vertex and printing
+    //info for each vertex being one row in the dist and path matrices
+    {
+        int temp[N];int temp2[N];
+        for(int j=0;j<N;j++)
+        {
+            temp[j]=Dist[i][j];
+            temp2[j]=Path[i][j];
+        }
+        printCosts(temp,N,i);
+        printPaths(temp2,N,i);
+    }
+
+}
+
+
 int main()
 {
     alist graph=createGraph();
@@ -818,14 +955,14 @@ int main()
     addEdgeWeightedD(&graph,2,3,6);
     addEdgeWeightedD(&graph,2,4,2);
     //deleteNode(&graph,32);
-    DepthFirstSearch(&graph,&connect);
+    DepthFirstTraversal(&graph,&connect);
     printf("\n");
-    BreadthFirstSearch(&graph);
+    BreadthFirstTraversal(&graph);
     printf("\n");
     TopologicalSort(&graph);
     printf("\n");
     Dijkstra(&graph,0);
-
+    APSP(&graph);
     
 
 }
