@@ -532,8 +532,9 @@ void Traverse(int node_no)
 {
     printf("%d-->",node_no);
 }
-void DepthFirstTraversal(alist* graph,bool* connected)
+void DepthFirstTraversal(alist* graph,bool* connected,bool* cycleExists)
 {
+    printf("\nThe depth first traversal for this graph is:\n");
     stack frontier;
     int flag=0;
     initStack(&frontier);
@@ -550,11 +551,16 @@ void DepthFirstTraversal(alist* graph,bool* connected)
                 vector neighbors;
                 initVector(&neighbors);
                 neighbors=neighbours(graph,frontier.top->node_no);
+                
                 Traverse(frontier.top->node_no);
                 push_back(&seen,frontier.top->node_no);
                 PopStack(&frontier);
                 for(int i=0;i<neighbors.used;i++)
                 {
+                    if(isPresentinStack(&frontier,neighbors.array[i])==TRUE)
+                    {
+                        *cycleExists=TRUE; //detecting cycle here.
+                    }
                     if(!isElementV(&seen,neighbors.array[i]) && !isPresentinStack(&frontier,neighbors.array[i]))
                     {
                         PushStack(&frontier,neighbors.array[i]);
@@ -752,8 +758,8 @@ void TopologicalSort(alist* graph){
 
 bool isConnected(alist* graph)
 {
-    bool connect;
-    DepthFirstTraversal(graph,&connect);
+    bool connect;bool cycle;
+    DepthFirstTraversal(graph,&connect,&cycle);
     if(connect==TRUE)
     {
         printf("Graph is connected\n");
@@ -824,7 +830,15 @@ void printPaths(int Path[],int sz,int num)//Function only works with index==node
         printf("\nShortest Path from %d to %d\t",num,i);
         if(Path[i]==num)
         {
-            printf("%d--->%d\n",num,i);
+            if(num==i)
+            {
+                printf("itself\n");
+            }
+            else
+            {
+                printf("%d--->%d\n",num,i);
+            }
+                   
         }
         else
         {
@@ -933,11 +947,26 @@ void APSP(alist* graph)
 
 }
 
+bool doesGraphHaveACycle(alist* g)
+{
+    bool connect,cycle;
+    DepthFirstTraversal(g,&connect,&cycle);
+    if(cycle==TRUE)
+    {
+        printf("\nYes the graph has atleast 1 cycle.\n");
+    }
+    else
+    {
+        printf("This graph has no cycles.\n");
+    }
+    
+}
+
 
 int main()
 {
     alist graph=createGraph();
-    bool connect;
+    bool connect,cycle;
     addNode(&graph,0);
     addNode(&graph,1);
     addNode(&graph,2);
@@ -955,7 +984,7 @@ int main()
     addEdgeWeightedD(&graph,2,3,6);
     addEdgeWeightedD(&graph,2,4,2);
     //deleteNode(&graph,32);
-    DepthFirstTraversal(&graph,&connect);
+    DepthFirstTraversal(&graph,&connect,&cycle);
     printf("\n");
     BreadthFirstTraversal(&graph);
     printf("\n");
@@ -963,6 +992,7 @@ int main()
     printf("\n");
     Dijkstra(&graph,0);
     APSP(&graph);
+    doesGraphHaveACycle(&graph);
     
 
 }
