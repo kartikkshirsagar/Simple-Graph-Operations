@@ -962,6 +962,80 @@ bool doesGraphHaveACycle(alist* g)
     
 }
 
+int minKey(int key[], bool mstSet[],int sz) 
+{ 
+    // Initialize min value 
+    int min = INT_MAX, min_index; 
+  
+    for (int v = 0; v <sz ; v++) 
+        if (mstSet[v] == FALSE && key[v] < min) 
+            min = key[v], min_index = v; 
+  
+    return min_index; 
+} 
+
+
+int printMST(int parent[], alist* graph) 
+{ 
+    int V=graph->occupied;
+    printf("Edge \tWeight\n"); 
+    for (int i = 1; i < V; i++) 
+        printf("%d---%d \t%d \n", parent[i], i, Cost(graph,i,parent[i])); 
+} 
+
+void primMST(alist* graph) 
+{ 
+    int V=graph->occupied;
+    // Array to store constructed MST 
+    int parent[V]; 
+    // Key values used to pick minimum weight edge in cut 
+    int key[V]; 
+    // To represent set of vertices not yet included in MST 
+    bool mstSet[V]; 
+  
+    // Initialize all keys as INFINITE 
+    for (int i = 0; i < V; i++) 
+        key[i] = INT_MAX, mstSet[i] = FALSE; 
+  
+    // Always include first 1st vertex in MST. 
+    // Make key 0 so that this vertex is picked as first vertex. 
+    key[0] = 0; 
+    parent[0] = -1; // First node is always root of MST 
+  
+    // The MST will have V vertices 
+    for (int count = 0; count < V - 1; count++) { 
+        // Pick the minimum key vertex from the 
+        // set of vertices not yet included in MST 
+        int u = minKey(key, mstSet,V); 
+  
+        // Add the picked vertex to the MST Set 
+        mstSet[u] = TRUE; 
+  
+        // Update key value and parent index of 
+        // the adjacent vertices of the picked vertex. 
+        // Consider only those vertices which are not 
+        // yet included in MST 
+        for (int v = 0; v < V; v++) 
+  
+            // graph[u][v] is non zero only for adjacent vertices of m 
+            // mstSet[v] is false for vertices not yet included in MST 
+            // Update the key only if graph[u][v] is smaller than key[v] 
+            if (Cost(graph,u,v) && mstSet[v] == FALSE && Cost(graph,u,v) < key[v]) 
+                parent[v] = u, key[v] = Cost(graph,u,v); 
+    } 
+  
+    // print the constructed MST 
+    //printMST(parent, graph);
+    int sum=0;
+    for(int i=0;i<V;i++)
+    {
+        sum=sum+key[i];
+    }
+    printf("\nThe cost of MST is:%d\n",sum);
+    printMST(parent,graph); 
+} 
+
+
 
 int main()
 {
@@ -973,16 +1047,16 @@ int main()
     addNode(&graph,3);
     addNode(&graph,4);
    // addNode(&graph,5);
-    addEdgeWeightedD(&graph,0,1,2);
-    addEdgeWeightedD(&graph,0,2,5);
-    addEdgeWeightedD(&graph,0,4,3);
-    addEdgeWeightedD(&graph,1,2,6);
-    addEdgeWeightedD(&graph,1,4,10);
-    addEdgeWeightedD(&graph,1,3,4);
-    addEdgeWeightedD(&graph,4,3,2);
-    addEdgeWeightedD(&graph,4,2,1);
-    addEdgeWeightedD(&graph,2,3,6);
-    addEdgeWeightedD(&graph,2,4,2);
+    addEdgeWeightedU(&graph,0,1,2);
+    addEdgeWeightedU(&graph,0,2,5);
+    addEdgeWeightedU(&graph,0,4,3);
+    addEdgeWeightedU(&graph,1,2,6);
+    addEdgeWeightedU(&graph,1,4,10);
+    addEdgeWeightedU(&graph,1,3,4);
+    addEdgeWeightedU(&graph,4,3,2);
+    addEdgeWeightedU(&graph,4,2,1);
+    addEdgeWeightedU(&graph,2,3,6);
+    addEdgeWeightedU(&graph,2,4,2);
     //deleteNode(&graph,32);
     DepthFirstTraversal(&graph,&connect,&cycle);
     printf("\n");
@@ -993,6 +1067,9 @@ int main()
     Dijkstra(&graph,0);
     APSP(&graph);
     doesGraphHaveACycle(&graph);
+    primMST(&graph);
     
+
+
 
 }
