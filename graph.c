@@ -475,7 +475,6 @@ void deleteNode(alist* graph,int number)
     deleteEvidenceofNode(graph,number); //deletes all edges pointing to the deleted node
     
     
-    
 }
 
 void addEdgeD(alist* graph,int node1,int node2)// node1->node2 directed
@@ -532,6 +531,7 @@ void Traverse(int node_no)
 {
     printf("%d-->",node_no);
 }
+
 void DepthFirstTraversal(alist* graph,bool* connected,bool* cycleExists)
 {
     printf("\nThe depth first traversal for this graph is:\n");
@@ -568,7 +568,8 @@ void DepthFirstTraversal(alist* graph,bool* connected,bool* cycleExists)
                     }
                 }
             }
-            if(graph->occupied==seen.used && flag==0)
+
+            if(graph->occupied==seen.used && flag==0) //CONNECTED AND DISCONNECTED
             {
                 *connected=TRUE;
                 flag=1;
@@ -753,7 +754,7 @@ void TopologicalSort(alist* graph){
         j++;
     }
 
-};
+}
 
 
 bool isConnected(alist* graph)
@@ -964,7 +965,7 @@ bool doesGraphHaveACycle(alist* g)
 
 int minKey(int key[], bool mstSet[],int sz) 
 { 
-    // Initialize min value 
+    
     int min = INT_MAX, min_index; 
   
     for (int v = 0; v <sz ; v++) 
@@ -1036,7 +1037,48 @@ void primMST(alist* graph)
 } 
 
 
-
+void printrecur(int path[],bool visited[],int s,int d,alist* g,int pi)
+{
+    visited[s]=TRUE;
+    path[pi]=s;
+    pi++;
+    if(s==d)
+    {
+        for(int i=0;i<pi;i++)
+        {
+            printf("%d--->",path[i]);
+        }
+        printf("\n\n");
+    }
+    else
+    {
+        
+        vector neighbors;
+        initVector(&neighbors);
+        neighbors=neighbours(g,s);
+        for(int i=0;i<neighbors.used;i++)
+        {
+            if(visited[neighbors.array[i]]==FALSE)
+            {
+                printrecur(path,visited,neighbors.array[i],d,g,pi);
+            }
+        }
+    }
+    pi--;
+    visited[s]=FALSE;    
+}
+void PrintAllPaths(int source,int dest,alist* graph)
+{
+    printf("\nAll the paths from %d to %d are:\n",source,dest);
+    bool visited[graph->occupied];int pi=0;
+    int path[graph->occupied];
+    int path_index=0;
+    for(int i=0;i<graph->occupied;i++)
+    {
+        visited[i]=FALSE;
+    }
+    printrecur(path,visited,source,dest,graph,pi);
+}
 int main()
 {
     alist graph=createGraph();
@@ -1056,7 +1098,7 @@ int main()
     addEdgeWeightedU(&graph,4,3,2);
     addEdgeWeightedU(&graph,4,2,1);
     addEdgeWeightedU(&graph,2,3,6);
-    addEdgeWeightedU(&graph,2,4,2);
+    //addEdgeWeightedU(&graph,2,4,2);
     //deleteNode(&graph,32);
     DepthFirstTraversal(&graph,&connect,&cycle);
     printf("\n");
@@ -1068,7 +1110,7 @@ int main()
     APSP(&graph);
     doesGraphHaveACycle(&graph);
     primMST(&graph);
-    
+    PrintAllPaths(0,4,&graph);
 
 
 
