@@ -426,8 +426,9 @@ int SearchNodeG(alist *graph, int node_no)
 
 void addNode(alist *graph, int node_no)
 {
-    graph->arr[graph->occupied].node_number = node_no;
+    graph->arr[graph->occupied].node_number = graph->occupied;
     graph->occupied++;
+    printf("Node %d added\n",graph->occupied-1);
 }
 
 void deleteEvidenceofNode(alist *graph, int number)
@@ -782,7 +783,7 @@ int minInArr(int Dist[], int sz, int Found[])
 
 void printCosts(int Dist[], int sz, int num) //Function only works with index==node_number
 {
-    printf("\nCosts from vertex %d\n", num);
+    printf("\nLeast costs from vertex %d\n", num);
     for (int i = 0; i < sz; i++)
     {
         printf("Vertex %d\t%d\n", i, Dist[i]);
@@ -791,7 +792,7 @@ void printCosts(int Dist[], int sz, int num) //Function only works with index==n
 
 void printPaths(int Path[], int sz, int num) //Function only works with index==node_number
 {
-    printf("\n\nPaths from vertex %d\n", num);
+    printf("\n\nShortest paths from vertex %d\n", num);
     for (int i = 0; i < sz; i++)
     {
         printf("\nShortest Path from %d to %d\t", num, i);
@@ -1005,7 +1006,13 @@ void printrecur(int path[], bool visited[], int s, int d, alist *g, int pi)
 }
 void PrintAllPaths(int source, int dest, alist *graph)
 {
+    
     printf("\nAll the paths from %d to %d are:\n", source, dest);
+    if(source==dest)
+    {
+        printf("They are the same\n");
+        return;
+    }
     bool visited[graph->occupied];
     int pi = 0;
     int path[graph->occupied];
@@ -1047,5 +1054,92 @@ int main()
     APSP(&graph);
     doesGraphHaveACycle(&graph);
     //primMST(&graph);
-    PrintAllPaths(3, 0, &graph);
+    PrintAllPaths(0, 0, &graph);
+
+    printf("Making a graph..\n1) Unweighted \n2) Weighted\n");
+    alist g=createGraph();
+    int ans;
+    scanf("%d",&ans);
+    if(ans==1)
+    {
+        int ans=1;
+        printf("To add Node, keep pressing 1,to stop adding nodes press 2\n");
+        while(ans==1)
+        {
+            scanf("%d",&ans);
+            if(ans==1)
+            {
+                addNode(&g,0);
+            }
+        }
+        printf("Which edges do you need? 1 for directed 2 for undirected\n");
+        int ans1;
+        scanf("%d",&ans1);
+        printf("Enter the node numbers you want edges between(type -1 -1 to stop)\n");
+        int n1=0,n2=0;
+        while(n1!=-1 && n2!=-1)
+        {
+            scanf("%d %d",&n1,&n2);
+            if(n1!=-1 && n2!=-1)
+            {
+                if(ans1==1)
+                {
+                    addEdgeD(&g,n1,n2);
+                }
+                else
+                {
+                    addEdgeU(&g,n1,n2);
+                }
+                
+            }
+        }
+
+    }
+    else
+    {
+        int ans=1;
+        printf("To add Node,keep pressing 1,to stop adding nodes press 2\n");
+        while(ans==1)
+        {
+            scanf("%d",&ans);
+            if(ans==1)
+            {
+                addNode(&g,0);
+            }
+        }
+        printf("Which edges do you need? 1 for directed 2 for undirected\n");
+        int ans1;
+        scanf("%d",&ans1);
+        printf("Enter the node numbers you want edges between and the cost also(type -1 -1 -1 to stop)\n");
+        int n1=0,n2=0,cost=0;
+        while(n1!=-1 && n2!=-1 && cost!=-1)
+        {
+            scanf("%d %d",&n1,&n2,&cost);
+            if(n1!=-1 && n2!=-1 && cost!=-1)
+            {
+                if(ans1==1)
+                {
+                    addEdgeWeightedD(&g,n1,n2,cost);
+                }
+                else
+                {
+                    addEdgeWeightedU(&g,n1,n2,cost);
+                }
+                
+            }
+        }
+    }
+
+    DepthFirstTraversal(&g, &connect, &cycle);
+    printf("\n");
+    BreadthFirstTraversal(&g);
+    printf("\n");
+    TopologicalSort(&g);
+    printf("\n");
+    Dijkstra(&g, 0);
+    APSP(&g);
+    doesGraphHaveACycle(&g);
+    //primMST(&graph);
+    PrintAllPaths(0, 0, &g);
+    
 }
